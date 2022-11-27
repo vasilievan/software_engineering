@@ -5,6 +5,25 @@ const display = function display(objString) {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 5;
+    document.addEventListener('wheel', function (e) {
+        camera.position.z = camera.position.z + event.deltaY * 0.001;
+    });
+    document.addEventListener('keydown', function (e) {
+        switch (event.key) {
+            case 'ArrowLeft':
+                object.rotation.y -= 0.1;
+                break;
+            case 'ArrowRight':
+                object.rotation.y += 0.1;
+                break;
+            case 'ArrowUp':
+                object.rotation.x += 0.1;
+                break;
+            case 'ArrowDown':
+                object.rotation.x -= 0.1;
+                break;
+        }
+    });
     let loader = new THREE.OBJLoader();
     const object = loader.parse(objString);
     scene.add(object);
