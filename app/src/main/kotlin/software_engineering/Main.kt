@@ -9,6 +9,8 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.html.*
 import java.io.ByteArrayOutputStream
 
@@ -18,50 +20,56 @@ fun main(args: Array<String>) {
     embeddedServer(Netty, port = 80) {
         routing {
             get("/*") {
-                call.respondHtml(HttpStatusCode.NotFound) {
-                    head {
-                        title {
-                            +"Display .obj"
+                withContext(Dispatchers.IO) {
+                    call.respondHtml(HttpStatusCode.NotFound) {
+                        head {
+                            title {
+                                +"Display .obj"
+                            }
+                            style {
+                                +style!!
+                            }
                         }
-                        style {
-                            +style!!
-                        }
-                    }
-                    body {
-                        div {
-                            +"Page not found (404)"
+                        body {
+                            div {
+                                +"Page not found (404)"
+                            }
                         }
                     }
                 }
             }
             get("/") {
-                call.respondRedirect("/display")
+                withContext(Dispatchers.IO) {
+                    call.respondRedirect("/display")
+                }
             }
             get("/display") {
-                call.respondHtml(HttpStatusCode.OK) {
-                    head {
-                        title {
-                            +"Display .obj"
+                withContext(Dispatchers.IO) {
+                    call.respondHtml(HttpStatusCode.OK) {
+                        head {
+                            title {
+                                +"Display .obj"
+                            }
+                            style {
+                                +style!!
+                            }
                         }
-                        style {
-                            +style!!
-                        }
-                    }
-                    body {
-                        form(
-                            encType = FormEncType.multipartFormData,
-                            action = "/display",
-                            method = FormMethod.post
-                        ) {
-                            div {
-                                unsafe {
-                                    +"<label for=\"upload-model\">Browse file...</label>"
-                                }
-                                input(type = InputType.file) {
-                                    id = "upload-model"
-                                    name = "upload-model"
-                                    accept = ".obj"
-                                    onChange = "form.submit();"
+                        body {
+                            form(
+                                encType = FormEncType.multipartFormData,
+                                action = "/display",
+                                method = FormMethod.post
+                            ) {
+                                div {
+                                    unsafe {
+                                        +"<label for=\"upload-model\">Browse file...</label>"
+                                    }
+                                    input(type = InputType.file) {
+                                        id = "upload-model"
+                                        name = "upload-model"
+                                        accept = ".obj"
+                                        onChange = "form.submit();"
+                                    }
                                 }
                             }
                         }
@@ -69,32 +77,34 @@ fun main(args: Array<String>) {
                 }
             }
             post("/display") {
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                val multipart = call.receiveMultipart()
-                multipart.forEachPart { part ->
-                    if (part is PartData.FileItem) {
-                        val fileBytes = part.streamProvider().readBytes()
-                        byteArrayOutputStream.writeBytes(fileBytes)
+                withContext(Dispatchers.IO) {
+                    val byteArrayOutputStream = ByteArrayOutputStream()
+                    val multipart = call.receiveMultipart()
+                    multipart.forEachPart { part ->
+                        if (part is PartData.FileItem) {
+                            val fileBytes = part.streamProvider().readBytes()
+                            byteArrayOutputStream.writeBytes(fileBytes)
+                        }
+                        part.dispose()
                     }
-                    part.dispose()
-                }
-                call.respondHtml(HttpStatusCode.OK) {
-                    head {
-                        title {
-                            +"Display .obj"
+                    call.respondHtml(HttpStatusCode.OK) {
+                        head {
+                            title {
+                                +"Display .obj"
+                            }
+                            style {
+                                +style!!
+                            }
                         }
-                        style {
-                            +style!!
-                        }
-                    }
-                    body {
-                        script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.js") {}
-                        script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/OBJLoader.js") {}
-                        script {
-                            +viewFileFunction!!
-                        }
-                        script(type = "module") {
-                            +"display(`$byteArrayOutputStream`);"
+                        body {
+                            script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.js") {}
+                            script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/OBJLoader.js") {}
+                            script {
+                                +viewFileFunction!!
+                            }
+                            script(type = "module") {
+                                +"display(`$byteArrayOutputStream`);"
+                            }
                         }
                     }
                 }
