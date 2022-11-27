@@ -1,16 +1,20 @@
 package software_engineering
 
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.html.*
 import io.ktor.server.netty.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.*
+import java.io.ByteArrayOutputStream
 
 fun main(args: Array<String>) {
     val style = ClassLoader.getSystemClassLoader().getResource("style.css")?.readText()
+    val viewFileFunction = ClassLoader.getSystemClassLoader().getResource("display.js")?.readText()
     embeddedServer(Netty, port = 80) {
         routing {
             get("/") {
@@ -43,6 +47,37 @@ fun main(args: Array<String>) {
                                     onChange = "form.submit();"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            post("/display") {
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                val multipart = call.receiveMultipart()
+                multipart.forEachPart { part ->
+                    if (part is PartData.FileItem) {
+                        val fileBytes = part.streamProvider().readBytes()
+                        byteArrayOutputStream.writeBytes(fileBytes)
+                    }
+                    part.dispose()
+                }
+                call.respondHtml(HttpStatusCode.OK) {
+                    head {
+                        title {
+                            +"Display .obj"
+                        }
+                        style {
+                            +style!!
+                        }
+                    }
+                    body {
+                        script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.js") {}
+                        script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/OBJLoader.js") {}
+                        script {
+                            +viewFileFunction!!
+                        }
+                        script(type = "module") {
+                            +"display(`$byteArrayOutputStream`);"
                         }
                     }
                 }
