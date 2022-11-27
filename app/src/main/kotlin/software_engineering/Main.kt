@@ -17,6 +17,23 @@ fun main(args: Array<String>) {
     val viewFileFunction = ClassLoader.getSystemClassLoader().getResource("display.js")?.readText()
     embeddedServer(Netty, port = 80) {
         routing {
+            get("/*") {
+                call.respondHtml(HttpStatusCode.NotFound) {
+                    head {
+                        title {
+                            +"Display .obj"
+                        }
+                        style {
+                            +style!!
+                        }
+                    }
+                    body {
+                        div {
+                            +"Page not found (404)"
+                        }
+                    }
+                }
+            }
             get("/") {
                 call.respondRedirect("/display")
             }
