@@ -6,6 +6,10 @@
 
 Print in console ./gradlew run (Linux) or gradlew run (Windows), last jre should be intalled and JAVA_HOME set
 
+# OR
+
+Using docker: docker build -t enthusiasticprogrammer/obj_viewer . and start it with port mapping: docker run -p 80:80 enthusiasticprogrammer/obj_viewer.
+
 ### When the server is up
 Open browser, print localhost. Then Just select an .obj file you want to view
 
