@@ -1,5 +1,10 @@
 # OBJ-viewer
 
+Main:
+[![Tests](https://github.com/vasilievan/software_engineering/actions/workflows/gradle-tests.yml/badge.svg?branch=main)](https://github.com/vasilievan/software_engineering/actions/workflows/gradle-tests.yml)
+Develop:
+[![Tests](https://github.com/vasilievan/software_engineering/actions/workflows/gradle-tests.yml/badge.svg?branch=develop)](https://github.com/vasilievan/software_engineering/actions/workflows/gradle-tests.yml)
+
 ## Tool to view .obj 3D objects
 
 ### To start the server
