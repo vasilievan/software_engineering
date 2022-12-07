@@ -14,101 +14,107 @@ import kotlinx.coroutines.withContext
 import kotlinx.html.*
 import java.io.ByteArrayOutputStream
 
-fun main(args: Array<String>) {
+fun main() {
+    embeddedServer(Netty, port = 80, module = Application::module).start(wait = true)
+}
+
+fun Application.module() {
+    configureRouting()
+}
+
+fun Application.configureRouting() {
     val style = ClassLoader.getSystemClassLoader().getResource("style.css")?.readText()
     val viewFileFunction = ClassLoader.getSystemClassLoader().getResource("display.js")?.readText()
-    embeddedServer(Netty, port = 80) {
-        routing {
-            get("/*") {
-                withContext(Dispatchers.IO) {
-                    call.respondHtml(HttpStatusCode.NotFound) {
-                        head {
-                            title {
-                                +"Display .obj"
-                            }
-                            style {
-                                +style!!
-                            }
+    routing {
+        get("/*") {
+            withContext(Dispatchers.IO) {
+                call.respondHtml(HttpStatusCode.NotFound) {
+                    head {
+                        title {
+                            +"Display .obj"
                         }
-                        body {
-                            div {
-                                +"Page not found (404)"
-                            }
+                        style {
+                            +style!!
+                        }
+                    }
+                    body {
+                        div {
+                            +"Page not found (404)"
                         }
                     }
                 }
             }
-            get("/") {
-                withContext(Dispatchers.IO) {
-                    call.respondRedirect("/display")
-                }
+        }
+        get("/") {
+            withContext(Dispatchers.IO) {
+                call.respondRedirect("/display")
             }
-            get("/display") {
-                withContext(Dispatchers.IO) {
-                    call.respondHtml(HttpStatusCode.OK) {
-                        head {
-                            title {
-                                +"Display .obj"
-                            }
-                            style {
-                                +style!!
-                            }
+        }
+        get("/display") {
+            withContext(Dispatchers.IO) {
+                call.respondHtml(HttpStatusCode.OK) {
+                    head {
+                        title {
+                            +"Display .obj"
                         }
-                        body {
-                            form(
-                                encType = FormEncType.multipartFormData,
-                                action = "/display",
-                                method = FormMethod.post
-                            ) {
-                                div {
-                                    unsafe {
-                                        +"<label for=\"upload-model\">Browse file...</label>"
-                                    }
-                                    input(type = InputType.file) {
-                                        id = "upload-model"
-                                        name = "upload-model"
-                                        accept = ".obj"
-                                        onChange = "form.submit();"
-                                    }
+                        style {
+                            +style!!
+                        }
+                    }
+                    body {
+                        form(
+                            encType = FormEncType.multipartFormData,
+                            action = "/display",
+                            method = FormMethod.post
+                        ) {
+                            div {
+                                unsafe {
+                                    +"<label for=\"upload-model\">Browse file...</label>"
+                                }
+                                input(type = InputType.file) {
+                                    id = "upload-model"
+                                    name = "upload-model"
+                                    accept = ".obj"
+                                    onChange = "form.submit();"
                                 }
                             }
                         }
                     }
                 }
             }
-            post("/display") {
-                withContext(Dispatchers.IO) {
-                    val byteArrayOutputStream = ByteArrayOutputStream()
-                    val multipart = call.receiveMultipart()
-                    multipart.forEachPart { part ->
-                        if (part is PartData.FileItem) {
-                            val fileBytes = part.streamProvider().readBytes()
-                            byteArrayOutputStream.writeBytes(fileBytes)
-                        }
-                        part.dispose()
+        }
+        post("/display") {
+            withContext(Dispatchers.IO) {
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                val multipart = call.receiveMultipart()
+                multipart.forEachPart { part ->
+                    if (part is PartData.FileItem) {
+                        val fileBytes = part.streamProvider().readBytes()
+                        byteArrayOutputStream.writeBytes(fileBytes)
                     }
-                    call.respondHtml(HttpStatusCode.OK) {
-                        head {
-                            title {
-                                +"Display .obj"
-                            }
-                            style {
-                                +style!!
-                            }
+                    part.dispose()
+                }
+                call.respondHtml(HttpStatusCode.OK) {
+                    head {
+                        title {
+                            +"Display .obj"
                         }
-                        body {
-                            script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.js") {}
-                            script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/OBJLoader.js") {}
-                            script {
-                                +viewFileFunction!!
-                            }
-                            script(type = "module") {
-                                +"display(`$byteArrayOutputStream`);"
-                            }
+                        style {
+                            +style!!
+                        }
+                    }
+                    body {
+                        script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/build/three.js") {}
+                        script(src = "https://cdn.jsdelivr.net/npm/three@0.116.1/examples/js/loaders/OBJLoader.js") {}
+                        script {
+                            +viewFileFunction!!
+                        }
+                        script(type = "module") {
+                            +"display(`$byteArrayOutputStream`);"
                         }
                     }
                 }
             }
         }
-    }.start(wait = true)
+    }
 }
